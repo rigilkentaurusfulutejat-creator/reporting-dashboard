@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Reporting Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f0f2f5; color: #1a1a2e; }
+    header { background: #1a1a2e; color: #fff; padding: 18px 32px;
+             display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 1.3rem; font-weight: 600; }
+    header span { font-size: 0.85rem; opacity: 0.6; }
+    main { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .kpi { background: #fff; border-radius: 8px; padding: 20px 24px;
+           box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .kpi label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .05em;
+                 color: #666; display: block; margin-bottom: 6px; }
+    .kpi .value { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; }
+    .kpi .sub   { font-size: 0.8rem; color: #888; margin-top: 4px; }
+    .card { background: #fff; border-radius: 8px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between;
+                   margin-bottom: 18px; }
+    .card-header h2 { font-size: 1rem; font-weight: 600; }
+    .btn { display: inline-flex; align-items: center; gap: 7px;
+           background: #4f46e5; color: #fff; border: none; border-radius: 6px;
+           padding: 9px 18px; font-size: 0.875rem; font-weight: 500;
+           cursor: pointer; transition: background .15s; }
+    .btn:hover { background: #4338ca; }
+    .btn svg { width: 15px; height: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead th { text-align: left; padding: 10px 14px; font-size: 0.75rem;
+               text-transform: uppercase; letter-spacing: .04em;
+               color: #666; border-bottom: 2px solid #f0f2f5; }
+    tbody td { padding: 11px 14px; border-bottom: 1px solid #f7f7f9; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 12px;
+             font-size: 0.75rem; font-weight: 500; }
+    .badge.north { background:#e0f2fe; color:#0369a1; }
+    .badge.south { background:#fce7f3; color:#9d174d; }
+    .badge.east  { background:#dcfce7; color:#166534; }
+    .badge.west  { background:#fef3c7; color:#92400e; }
+    #export-status { margin-top: 8px; font-size: 0.8rem; color: #e11d48;
+                     min-height: 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Sales Reporting Dashboard</h1>
+    <span>January 2024 · 20 records</span>
+  </header>
+  <main>
+    <div class="kpi-row">
+      <div class="kpi">
+        <label>Total Revenue</label>
+        <div class="value">$180,305</div>
+        <div class="sub">January 2024</div>
+      </div>
+      <div class="kpi">
+        <label>Total Units</label>
+        <div class="value">2,865</div>
+        <div class="sub">Across all regions</div>
+      </div>
+      <div class="kpi">
+        <label>Avg Order Value</label>
+        <div class="value">$9,015</div>
+        <div class="sub">Per transaction</div>
+      </div>
+      <div class="kpi">
+        <label>Top Region</label>
+        <div class="value">West</div>
+        <div class="sub">$51,320 revenue</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Sales Transactions</h2>
+        <div>
+          <button class="btn" id="export-btn" onclick="exportCSV()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Export CSV
+          </button>
+          <div id="export-status"></div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Region</th><th>Product</th>
+            <th>Units</th><th>Revenue</th><th>Rep</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const rows = [
+      ['2024-01-01','North','Widget A',142,7100.00,'Alice Johnson'],
+      ['2024-01-02','South','Widget B',98,5880.00,'Bob Martinez'],
+      ['2024-01-03','East','Widget A',210,10500.00,'Carol Lee'],
+      ['2024-01-04','West','Widget C',55,4125.00,'David Kim'],
+      ['2024-01-05','North','Widget B',180,10800.00,'Alice Johnson'],
+      ['2024-01-08','South','Widget C',77,5775.00,'Eve Torres'],
+      ['2024-01-09','East','Widget A',134,6700.00,'Frank Patel'],
+      ['2024-01-10','West','Widget B',201,12060.00,'Carol Lee'],
+      ['2024-01-11','North','Widget C',66,4950.00,'Bob Martinez'],
+      ['2024-01-12','South','Widget A',189,9450.00,'David Kim'],
+      ['2024-01-15','East','Widget B',115,6900.00,'Alice Johnson'],
+      ['2024-01-16','West','Widget A',244,12200.00,'Eve Torres'],
+      ['2024-01-17','North','Widget C',88,6600.00,'Frank Patel'],
+      ['2024-01-18','South','Widget B',167,10020.00,'Carol Lee'],
+      ['2024-01-19','East','Widget A',203,10150.00,'Bob Martinez'],
+      ['2024-01-22','West','Widget C',49,3675.00,'David Kim'],
+      ['2024-01-23','North','Widget B',156,9360.00,'Alice Johnson'],
+      ['2024-01-24','South','Widget A',198,9900.00,'Eve Torres'],
+      ['2024-01-25','East','Widget C',72,5400.00,'Frank Patel'],
+      ['2024-01-26','West','Widget B',221,13260.00,'Carol Lee'],
+    ];
+
+    const tbody = document.getElementById('table-body');
+    rows.forEach(([date, region, product, units, revenue, rep]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${date}</td>
+        <td><span class="badge ${region.toLowerCase()}">${region}</span></td>
+        <td>${product}</td>
+        <td>${units.toLocaleString()}</td>
+        <td>$${revenue.toLocaleString('en-US', {minimumFractionDigits:2})}</td>
+        <td>${rep}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    function exportCSV() {
+      const status = document.getElementById('export-status');
+      status.textContent = 'Requesting export…';
+      fetch('/api/export/csv')
+        .then(res => {
+          const ct = res.headers.get('content-type') || '';
+          if (ct.includes('text/html')) {
+            status.textContent = '⚠ Wrong Content-Type received: ' + ct;
+          } else {
+            status.textContent = '';
+          }
+          return res.blob();
+        })
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'sales_report.csv';
+          a.click();
+          URL.revokeObjectURL(url);
+        })
+        .catch(() => { status.textContent = 'Export failed. Is the server running?'; });
+    }
+  </script>
+</body>
+</html>
